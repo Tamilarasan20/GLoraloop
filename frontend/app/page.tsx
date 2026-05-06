@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Loader2, Play, Save } from "lucide-react";
+import { Database, Download, FileText, ImageIcon, Loader2, Palette, Play, Save } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 
@@ -39,6 +39,8 @@ type BrandAnalysisResult = {
     tone: string[];
     colors: string[];
     font_style: string;
+    logo_url?: string | null;
+    images: string[];
     campaign_angles: string[];
   };
   campaign_concepts: Array<{
@@ -57,23 +59,42 @@ type BrandAnalysisResult = {
       overview: string;
       products_or_services: string[];
       key_selling_points: string[];
+      retail_or_distribution?: string[];
       target_audience: string[];
+      founder_story?: string | null;
+      marketing_goals?: string[];
+      website?: string;
     };
     social_strategy: {
+      priority_platforms?: Array<{ platform: string; priority: number; role: string; posting_cadence: string }>;
       content_pillars: string[];
+      messaging_hierarchy?: string[];
       quick_wins: string[];
     };
     market_research: {
       market_opportunity: string[];
+      trend_tailwinds?: string[];
+      competitive_landscape?: string[];
       key_risks: string[];
+      social_platform_insights?: string[];
+      target_audiences_on_social?: string[];
     };
     brand_guidelines: {
       brand_personality: string[];
       color_palette: Record<string, string>;
+      typography?: Record<string, string>;
+      design_style?: string[];
+      logo_url?: string | null;
       social_content_principles: string[];
     };
-    extracted_assets: Array<{ type: string; url: string; alt?: string | null }>;
+    extracted_assets: Array<{ type: string; url: string; alt?: string | null; width?: number | null; height?: number | null; notes?: string | null }>;
   } | null;
+};
+
+type KnowledgeBaseResponse = {
+  id: string;
+  business_name: string;
+  website: string;
 };
 
 type JobResponse = {
@@ -93,6 +114,9 @@ export default function Home() {
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
   const [canvasExporter, setCanvasExporter] = useState<(() => void) | null>(null);
+  const [activeKbTab, setActiveKbTab] = useState<"Documents" | "Visual Assets" | "Brand Guidelines">("Documents");
+  const [savedKnowledgeBase, setSavedKnowledgeBase] = useState<KnowledgeBaseResponse | null>(null);
+  const [isSavingKnowledgeBase, setIsSavingKnowledgeBase] = useState(false);
 
   const result = job?.result ?? null;
   const template = result?.template_ready_data[selectedTemplate] ?? null;
@@ -110,6 +134,7 @@ export default function Home() {
   async function startAnalysis() {
     setIsStarting(true);
     setJob(null);
+    setSavedKnowledgeBase(null);
     try {
       const response = await fetch(`${API_BASE}/v1/brand-kits/jobs`, {
         method: "POST",
@@ -150,6 +175,28 @@ export default function Home() {
         templates: result.template_ready_data
       })
     });
+  }
+
+  async function saveKnowledgeBase() {
+    if (!result) return;
+    setIsSavingKnowledgeBase(true);
+    try {
+      const response = await fetch(`${API_BASE}/v1/knowledge-bases`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer founder@laraloop.local"
+        },
+        body: JSON.stringify({
+          source_url: url,
+          analysis: result
+        })
+      });
+      const saved = (await response.json()) as KnowledgeBaseResponse;
+      setSavedKnowledgeBase(saved);
+    } finally {
+      setIsSavingKnowledgeBase(false);
+    }
   }
 
   return (
@@ -219,6 +266,11 @@ export default function Home() {
             <Save size={18} />
             Save Project
           </button>
+          <button className="wide ghost" onClick={saveKnowledgeBase} disabled={!result || isSavingKnowledgeBase}>
+            {isSavingKnowledgeBase ? <Loader2 size={18} className="spin" /> : <Database size={18} />}
+            {savedKnowledgeBase ? "Knowledge Base Saved" : "Save Knowledge Base"}
+          </button>
+          {savedKnowledgeBase && <p className="saved-note">KB ID: {savedKnowledgeBase.id.slice(0, 8)}</p>}
           {strategyPdfUrl && (
             <a className="download-link" href={strategyPdfUrl} target="_blank" rel="noreferrer">
               Open Strategy PDF
@@ -236,19 +288,22 @@ export default function Home() {
               ))}
               {result.strategy_document && (
                 <>
-                  <h3>Strategy Document</h3>
-                  <article className="concept">
-                    <strong>Business Profile</strong>
-                    <p>{result.strategy_document.business_profile.overview}</p>
-                  </article>
-                  <article className="concept">
-                    <strong>Social Strategy</strong>
-                    <p>{result.strategy_document.social_strategy.content_pillars.slice(0, 3).join(", ")}</p>
-                  </article>
-                  <article className="concept">
-                    <strong>Extracted Assets</strong>
-                    <p>{result.strategy_document.extracted_assets.length} website assets found.</p>
-                  </article>
+                  <h3>Knowledge Base</h3>
+                  <div className="kb-tabs">
+                    {(["Documents", "Visual Assets", "Brand Guidelines"] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        className={activeKbTab === tab ? "kb-tab active" : "kb-tab"}
+                        onClick={() => setActiveKbTab(tab)}
+                      >
+                        {tab === "Documents" && <FileText size={14} />}
+                        {tab === "Visual Assets" && <ImageIcon size={14} />}
+                        {tab === "Brand Guidelines" && <Palette size={14} />}
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                  <KnowledgeBasePreview result={result} activeTab={activeKbTab} />
                 </>
               )}
             </>
@@ -256,5 +311,96 @@ export default function Home() {
         </aside>
       </section>
     </main>
+  );
+}
+
+function KnowledgeBasePreview({
+  result,
+  activeTab
+}: {
+  result: BrandAnalysisResult;
+  activeTab: "Documents" | "Visual Assets" | "Brand Guidelines";
+}) {
+  const doc = result.strategy_document;
+  if (!doc) return null;
+
+  if (activeTab === "Documents") {
+    return (
+      <div className="kb-section">
+        <DocumentCard title="Business Profile" lines={[
+          doc.business_profile.overview,
+          ...doc.business_profile.key_selling_points.slice(0, 3)
+        ]} />
+        <DocumentCard title="Social Strategy" lines={[
+          ...doc.social_strategy.content_pillars.slice(0, 4),
+          ...doc.social_strategy.quick_wins.slice(0, 2)
+        ]} />
+        <DocumentCard title="Market Research" lines={[
+          ...doc.market_research.market_opportunity.slice(0, 3),
+          ...doc.market_research.key_risks.slice(0, 2)
+        ]} />
+      </div>
+    );
+  }
+
+  if (activeTab === "Visual Assets") {
+    const assets = doc.extracted_assets.filter((asset) => asset.url);
+    return (
+      <div className="kb-section">
+        <p className="kb-muted">{assets.length} scraped assets available for future campaigns.</p>
+        <div className="asset-grid">
+          {assets.slice(0, 12).map((asset, index) => (
+            <a
+              key={`${asset.url}-${index}`}
+              className="asset-tile"
+              href={asset.url.startsWith("/") ? `${API_BASE}${asset.url}` : asset.url}
+              target="_blank"
+              rel="noreferrer"
+              title={asset.alt ?? asset.notes ?? asset.type}
+            >
+              {asset.type === "screenshot" || asset.type === "image" || asset.type === "logo" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={asset.url.startsWith("/") ? `${API_BASE}${asset.url}` : asset.url} alt={asset.alt ?? asset.type} />
+              ) : (
+                <ImageIcon size={18} />
+              )}
+              <span>{asset.type}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const guidelines = doc.brand_guidelines;
+  return (
+    <div className="kb-section">
+      <DocumentCard title="Personality" lines={guidelines.brand_personality} />
+      <div className="guideline-block">
+        <strong>Color Palette</strong>
+        <div className="guideline-swatches">
+          {Object.entries(guidelines.color_palette).map(([role, color]) => (
+            <span key={`${role}-${color}`}>
+              <i style={{ background: color }} />
+              {role}: {color}
+            </span>
+          ))}
+        </div>
+      </div>
+      <DocumentCard title="Content Principles" lines={guidelines.social_content_principles.slice(0, 5)} />
+    </div>
+  );
+}
+
+function DocumentCard({ title, lines }: { title: string; lines: string[] }) {
+  return (
+    <article className="kb-card">
+      <strong>{title}</strong>
+      <ul>
+        {lines.filter(Boolean).slice(0, 6).map((line, index) => (
+          <li key={`${title}-${index}`}>{line}</li>
+        ))}
+      </ul>
+    </article>
   );
 }

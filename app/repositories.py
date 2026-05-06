@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.models import BrandAnalysisJob, JobStatus, SavedProject, User
+from app.models import BrandAnalysisJob, JobStatus, KnowledgeBase, SavedProject, User
 
 
 class JobRepository:
@@ -81,3 +81,69 @@ class ProjectRepository:
             .order_by(SavedProject.updated_at.desc())
             .all()
         )
+
+
+class KnowledgeBaseRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def create(
+        self,
+        user_id: str,
+        business_name: str,
+        website: str,
+        scraped_data: dict,
+        enriched_data: dict,
+        brand_guidelines: dict,
+        brand_memory: dict,
+        visual_assets: list,
+        business_profile: str,
+        market_research: str,
+        social_strategy: str,
+        strategy_pdf_url: str | None,
+    ) -> KnowledgeBase:
+        knowledge_base = KnowledgeBase(
+            user_id=user_id,
+            business_name=business_name,
+            website=website,
+            scraped_data=scraped_data,
+            enriched_data=enriched_data,
+            brand_guidelines=brand_guidelines,
+            brand_memory=brand_memory,
+            visual_assets=visual_assets,
+            business_profile=business_profile,
+            market_research=market_research,
+            social_strategy=social_strategy,
+            strategy_pdf_url=strategy_pdf_url,
+        )
+        self.db.add(knowledge_base)
+        self.db.commit()
+        self.db.refresh(knowledge_base)
+        return knowledge_base
+
+    def list_for_user(self, user_id: str) -> list[KnowledgeBase]:
+        return (
+            self.db.query(KnowledgeBase)
+            .filter(KnowledgeBase.user_id == user_id)
+            .order_by(KnowledgeBase.updated_at.desc())
+            .all()
+        )
+
+    def get_for_user(self, knowledge_base_id: str, user_id: str) -> KnowledgeBase | None:
+        return (
+            self.db.query(KnowledgeBase)
+            .filter(KnowledgeBase.id == knowledge_base_id, KnowledgeBase.user_id == user_id)
+            .one_or_none()
+        )
+
+    def update_document(self, knowledge_base_id: str, user_id: str, document_type: str, content: str) -> KnowledgeBase:
+        knowledge_base = self.get_for_user(knowledge_base_id, user_id)
+        if knowledge_base is None:
+            raise ValueError("Knowledge base not found")
+        if document_type not in {"business_profile", "market_research", "social_strategy"}:
+            raise ValueError("Unsupported document type")
+
+        setattr(knowledge_base, document_type, content)
+        self.db.commit()
+        self.db.refresh(knowledge_base)
+        return knowledge_base

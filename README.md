@@ -84,6 +84,36 @@ The strategy document response includes:
 - extracted website assets
 - `strategy_pdf_url`
 
+Save an analysis as an approved Lora-style knowledge base:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/knowledge-bases \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer founder@laraloop.local" \
+  -d '{
+    "source_url":"https://example.com",
+    "analysis": { "...": "BrandAnalysisResponse JSON" }
+  }'
+```
+
+Build and save a knowledge base directly from a URL:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/knowledge-bases/build \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer founder@laraloop.local" \
+  -d '{"url":"https://example.com"}'
+```
+
+Knowledge bases store:
+
+- enriched brand data
+- brand guidelines
+- brand memory
+- editable markdown documents
+- scraped visual assets
+- source scrape JSON
+
 Create an async job:
 
 ```bash
@@ -125,6 +155,8 @@ The frontend includes:
 - saved project request using development bearer auth
 - strategy document summary
 - strategy PDF link
+- Lora-style knowledge base tabs for documents, visual assets, and brand guidelines
+- save knowledge base action
 
 ## API Shape
 

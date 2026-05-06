@@ -10,6 +10,7 @@ from app.db import init_db
 from app.routes.brand_kits import router as brand_kits_router
 from app.routes.documents import router as documents_router
 from app.routes.jobs import router as jobs_router
+from app.routes.knowledge_bases import router as knowledge_bases_router
 from app.routes.projects import router as projects_router
 from app.routes.publishing import router as publishing_router
 
@@ -44,6 +45,7 @@ async def health() -> dict[str, str]:
 app.include_router(brand_kits_router, prefix="/v1")
 app.include_router(documents_router, prefix="/v1")
 app.include_router(jobs_router, prefix="/v1")
+app.include_router(knowledge_bases_router, prefix="/v1")
 app.include_router(projects_router, prefix="/v1")
 app.include_router(publishing_router, prefix="/v1")
 settings.artifacts_dir.mkdir(parents=True, exist_ok=True)

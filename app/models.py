@@ -56,3 +56,24 @@ class SavedProject(Base):
     templates: Mapped[list] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
+
+
+class KnowledgeBase(Base):
+    __tablename__ = "knowledge_bases"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    business_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    website: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(40), default="approved", nullable=False)
+    scraped_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    enriched_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    brand_guidelines: Mapped[dict] = mapped_column(JSON, nullable=False)
+    brand_memory: Mapped[dict] = mapped_column(JSON, nullable=False)
+    visual_assets: Mapped[list] = mapped_column(JSON, nullable=False)
+    business_profile: Mapped[str] = mapped_column(Text, nullable=False)
+    market_research: Mapped[str] = mapped_column(Text, nullable=False)
+    social_strategy: Mapped[str] = mapped_column(Text, nullable=False)
+    strategy_pdf_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
