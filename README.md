@@ -21,8 +21,16 @@ Output:
 - FastAPI
 - Playwright
 - Pydantic
+- Celery
+- Redis
+- SQLAlchemy
+- PostgreSQL-ready persistence
+- Cloudflare R2-compatible storage
+- OpenAI/Gemini provider adapters
+- Next.js
+- React Konva
 
-The current brand intelligence layer uses deterministic heuristics so the app runs without AI API keys. It is isolated behind `BrandIntelligenceService`, which is where OpenAI/Gemini structured extraction should be wired next.
+The current brand intelligence layer uses deterministic heuristics when AI keys are absent. Set `LARALOOP_AI_PROVIDER=openai` or `LARALOOP_AI_PROVIDER=gemini` and provide the matching key to use the structured LLM extraction adapters.
 
 ## Setup
 
@@ -39,6 +47,12 @@ playwright install chromium
 uvicorn app.main:app --reload
 ```
 
+Run a Celery worker:
+
+```bash
+celery -A app.celery_app.celery_app worker --loglevel=info
+```
+
 Health check:
 
 ```bash
@@ -52,6 +66,46 @@ curl -X POST http://127.0.0.1:8000/v1/brand-kits/analyze \
   -H "Content-Type: application/json" \
   -d '{"url":"https://example.com"}'
 ```
+
+Create an async job:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/brand-kits/jobs \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}'
+```
+
+Poll a job:
+
+```bash
+curl http://127.0.0.1:8000/v1/jobs/{job_id}
+```
+
+Watch status over WebSocket:
+
+```text
+ws://127.0.0.1:8000/v1/jobs/{job_id}/ws
+```
+
+## Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:3000`.
+
+The frontend includes:
+
+- URL ingestion screen
+- async job polling
+- extracted Brand Kit panel
+- campaign variation selector
+- React Konva template canvas
+- PNG export
+- saved project request using development bearer auth
 
 ## API Shape
 
@@ -81,8 +135,7 @@ curl -X POST http://127.0.0.1:8000/v1/brand-kits/analyze \
 
 ## Next Backend Milestones
 
-- Add Celery and Redis so `/analyze` returns a `job_id` immediately.
-- Store brand kits and scrape artifacts in PostgreSQL.
-- Upload screenshots and selected assets to Cloudflare R2.
-- Replace heuristic extraction with strict OpenAI/Gemini structured outputs.
+- Replace placeholder Fal.ai, Photoroom, remove.bg, Meta, LinkedIn, and TikTok adapters with account-specific API calls.
+- Add migrations with Alembic before production deploys.
+- Replace development bearer auth with Clerk, Supabase Auth, Auth0, or first-party JWT verification.
 - Add fallback flows for blocked pages: screenshot upload, manual brand form, and partial extraction.
