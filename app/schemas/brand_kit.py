@@ -98,3 +98,67 @@ class BrandAnalysisResponse(BaseModel):
     campaign_concepts: list[CampaignConcept]
     template_ready_data: list[TemplateReadyData]
     scraped_data: ScrapedBrandData
+    strategy_document: "StrategyDocument | None" = None
+    strategy_pdf_url: str | None = None
+
+
+class ExtractedAsset(BaseModel):
+    type: str
+    url: str
+    alt: str | None = None
+    width: int | None = None
+    height: int | None = None
+    notes: str | None = None
+
+
+class BusinessProfile(BaseModel):
+    overview: str
+    products_or_services: list[str]
+    key_selling_points: list[str]
+    retail_or_distribution: list[str]
+    target_audience: list[str]
+    founder_story: str | None = None
+    marketing_goals: list[str]
+    website: str
+
+
+class SocialPlatformPlan(BaseModel):
+    platform: str
+    priority: int
+    role: str
+    format_priority: list[str]
+    posting_cadence: str
+
+
+class SocialStrategy(BaseModel):
+    priority_platforms: list[SocialPlatformPlan]
+    content_pillars: list[str]
+    messaging_hierarchy: list[str]
+    quick_wins: list[str]
+
+
+class MarketResearch(BaseModel):
+    market_opportunity: list[str]
+    trend_tailwinds: list[str]
+    competitive_landscape: list[str]
+    key_risks: list[str]
+    social_platform_insights: list[str]
+    target_audiences_on_social: list[str]
+
+
+class BrandGuidelines(BaseModel):
+    brand_personality: list[str]
+    color_palette: dict[str, str]
+    typography: dict[str, str]
+    design_style: list[str]
+    logo_url: str | None = None
+    social_content_principles: list[str]
+
+
+class StrategyDocument(BaseModel):
+    title: str
+    business_profile: BusinessProfile
+    social_strategy: SocialStrategy
+    market_research: MarketResearch
+    brand_guidelines: BrandGuidelines
+    extracted_assets: list[ExtractedAsset]

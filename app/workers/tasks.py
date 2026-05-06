@@ -19,7 +19,7 @@ def run_brand_analysis_job(job_id: str) -> str:
             raise ValueError(f"Job {job_id} was not found.")
 
         repo.update_status(job_id, JobStatus.RUNNING, "scraping", 15)
-        result = asyncio.run(BrandDnaPipeline().analyze_url(job.url))
+        result = asyncio.run(BrandDnaPipeline().analyze_with_strategy_document(job.url))
         repo.update_status(
             job_id,
             JobStatus.SUCCEEDED,

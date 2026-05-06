@@ -194,6 +194,18 @@ h1 {
   width: 100%;
 }
 
+.download-link {
+  align-items: center;
+  background: #2f6f73;
+  border-radius: 8px;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  min-height: 42px;
+  text-decoration: none;
+}
+
 .ghost {
   background: #ecebe4;
   color: #1f2937;

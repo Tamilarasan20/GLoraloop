@@ -67,6 +67,23 @@ curl -X POST http://127.0.0.1:8000/v1/brand-kits/analyze \
   -d '{"url":"https://example.com"}'
 ```
 
+Generate an enriched strategy document with PDF:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/documents/strategy \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}'
+```
+
+The strategy document response includes:
+
+- business profile
+- social media strategy
+- market research
+- brand guidelines
+- extracted website assets
+- `strategy_pdf_url`
+
 Create an async job:
 
 ```bash
@@ -106,6 +123,8 @@ The frontend includes:
 - React Konva template canvas
 - PNG export
 - saved project request using development bearer auth
+- strategy document summary
+- strategy PDF link
 
 ## API Shape
 

@@ -3,10 +3,12 @@ from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.db import init_db
 from app.routes.brand_kits import router as brand_kits_router
+from app.routes.documents import router as documents_router
 from app.routes.jobs import router as jobs_router
 from app.routes.projects import router as projects_router
 from app.routes.publishing import router as publishing_router
@@ -40,6 +42,9 @@ async def health() -> dict[str, str]:
 
 
 app.include_router(brand_kits_router, prefix="/v1")
+app.include_router(documents_router, prefix="/v1")
 app.include_router(jobs_router, prefix="/v1")
 app.include_router(projects_router, prefix="/v1")
 app.include_router(publishing_router, prefix="/v1")
+settings.artifacts_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/artifacts", StaticFiles(directory=settings.artifacts_dir), name="artifacts")

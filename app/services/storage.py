@@ -11,7 +11,7 @@ class AssetStorageService:
         object_key = key or file_path.name
 
         if not self._r2_enabled():
-            return str(file_path)
+            return f"/artifacts/{object_key}"
 
         client = boto3.client(
             "s3",

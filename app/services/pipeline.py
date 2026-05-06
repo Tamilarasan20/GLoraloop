@@ -5,6 +5,7 @@ from app.services.ai_providers import get_brand_extraction_provider
 from app.services.brand_intelligence import BrandIntelligenceService
 from app.services.scraper import PlaywrightScraper
 from app.services.storage import AssetStorageService
+from app.services.strategy_pipeline import StrategyDocumentPipeline
 
 
 class BrandDnaPipeline:
@@ -38,3 +39,7 @@ class BrandDnaPipeline:
             template_ready_data=template_ready_data,
             scraped_data=scraped_data,
         )
+
+    async def analyze_with_strategy_document(self, url: str) -> BrandAnalysisResponse:
+        analysis = await self.analyze_url(url)
+        return await StrategyDocumentPipeline().enrich(analysis)

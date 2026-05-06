@@ -50,6 +50,30 @@ type BrandAnalysisResult = {
     channels: string[];
   }>;
   template_ready_data: TemplateReadyData[];
+  strategy_pdf_url?: string | null;
+  strategy_document?: {
+    title: string;
+    business_profile: {
+      overview: string;
+      products_or_services: string[];
+      key_selling_points: string[];
+      target_audience: string[];
+    };
+    social_strategy: {
+      content_pillars: string[];
+      quick_wins: string[];
+    };
+    market_research: {
+      market_opportunity: string[];
+      key_risks: string[];
+    };
+    brand_guidelines: {
+      brand_personality: string[];
+      color_palette: Record<string, string>;
+      social_content_principles: string[];
+    };
+    extracted_assets: Array<{ type: string; url: string; alt?: string | null }>;
+  } | null;
 };
 
 type JobResponse = {
@@ -72,6 +96,11 @@ export default function Home() {
 
   const result = job?.result ?? null;
   const template = result?.template_ready_data[selectedTemplate] ?? null;
+  const strategyPdfUrl = result?.strategy_pdf_url
+    ? result.strategy_pdf_url.startsWith("/")
+      ? `${API_BASE}${result.strategy_pdf_url}`
+      : result.strategy_pdf_url
+    : null;
 
   const statusLabel = useMemo(() => {
     if (!job) return "Ready";
@@ -190,6 +219,11 @@ export default function Home() {
             <Save size={18} />
             Save Project
           </button>
+          {strategyPdfUrl && (
+            <a className="download-link" href={strategyPdfUrl} target="_blank" rel="noreferrer">
+              Open Strategy PDF
+            </a>
+          )}
           {result && (
             <>
               <h3>Campaigns</h3>
@@ -200,6 +234,23 @@ export default function Home() {
                   <p>{concept.subheadline}</p>
                 </article>
               ))}
+              {result.strategy_document && (
+                <>
+                  <h3>Strategy Document</h3>
+                  <article className="concept">
+                    <strong>Business Profile</strong>
+                    <p>{result.strategy_document.business_profile.overview}</p>
+                  </article>
+                  <article className="concept">
+                    <strong>Social Strategy</strong>
+                    <p>{result.strategy_document.social_strategy.content_pillars.slice(0, 3).join(", ")}</p>
+                  </article>
+                  <article className="concept">
+                    <strong>Extracted Assets</strong>
+                    <p>{result.strategy_document.extracted_assets.length} website assets found.</p>
+                  </article>
+                </>
+              )}
             </>
           )}
         </aside>
